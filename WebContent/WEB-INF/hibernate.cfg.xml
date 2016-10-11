@@ -1,0 +1,137 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans    
+      http://www.springframework.org/schema/beans/spring-beans-4.0.xsd    
+      http://www.springframework.org/schema/context    
+      http://www.springframework.org/schema/context/spring-context.xsd
+     http://www.springframework.org/schema/tx 
+	 http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+
+	<!-- 配置数据源 -->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"
+		destroy-method="close">
+		<property name="driverClass" value="${c3p0.driverClass}" /><!-- 
+			org.postgresql.Driver -->
+		<property name="jdbcUrl" value="${c3p0.url}" /><!-- ?useUnicode=true&amp;characterEncoding=utf-8 -->
+		<property name="user" value="${c3p0.user}" />
+		<property name="password" value="${c3p0.password}" />
+		<property name="acquireIncrement" value="${c3p0.acquireIncrement}"></property>
+		<property name="initialPoolSize" value="${c3p0.initialPoolSize}"></property>
+		<property name="maxIdleTime" value="${c3p0.maxIdleTime}"></property>
+		<property name="maxPoolSize" value="${c3p0.maxPoolSize}"></property>
+		<property name="minPoolSize" value="${c3p0.minPoolSize}"></property>
+
+		<property name="acquireRetryDelay" value="1000"></property>
+		<property name="acquireRetryAttempts" value="60"></property>
+		<property name="breakAfterAcquireFailure" value="false"></property>
+		<!-- <property name="useUnicode" value="true"/> <property name="characterEncoding" 
+			value="UTF-8"/> -->
+	</bean>
+
+	<!-- 配置hibernate SessionFactory -->
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.current_session_context_class">org.springframework.orm.hibernate4.SpringSessionContext
+				</prop>
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop><!-- PostgreSQL9Dialect -->
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
+				<prop key="hibernate.show_sql">true</prop>
+				<prop key="hiberante.format_sql">false</prop>
+
+				<!--数据库连接池的大小 -->
+				<prop key="hibernate.connection.pool.size">200</prop>
+
+				<!-- 连接池启动时的初始值 -->
+				<prop key="initialSize">20</prop>
+
+				<!-- 连接池的最大值 -->
+				<prop key="maxActive">200</prop>
+
+				<!-- 最大空闲值.当经过一个高峰时间后，连接池可以慢慢将已经用不到的连接慢慢释放一部分，一直减少到maxIdle为止 -->
+				<prop key="maxIdle">100</prop>
+
+				<!-- 最大等待值.有多少个SESSION在等待 -->
+				<prop key="maxWait">50</prop>
+
+				<!-- 最小空闲值.当空闲的连接数少于阀值时，连接池就会预申请去一些连接，以免洪峰来时来不及申请 -->
+				<prop key="minIdle">50</prop>
+
+
+				<!--是指Hibernate每次从数据库中取出并放到JDBC的Statement中的记录条数。Fetch Size设的越大，读数据库的次数越少，速度越快，Fetch 
+					Size越小，读数据库的次数越多，速度越慢 -->
+				<prop key="jdbc.fetch_size">50</prop>
+
+				<!--是指Hibernate批量插入,删除和更新时每次操作的记录数。Batch Size越大，批量操作的向数据库发送Sql的次数越少，速度就越快，同样耗用内存就越大 -->
+				<prop key="jdbc.batch_size">50</prop>
+
+				<!--是否允许Hibernate用JDBC的可滚动的结果集。对分页的结果集。对分页时的设置非常有帮助 -->
+				<prop key="jdbc.use_scrollable_resultset">true</prop>
+				<prop key="hibernate.autoReconnect">true</prop>
+				<!--连接数据库时是否使用Unicode编码 -->
+				<prop key="connection.useUnicode">true</prop>
+
+				<!--连接数据库时数据的传输字符集编码方式 -->
+				<prop key="connection.characterEncoding">utf-8</prop>
+
+				<!-- 强制Hibernate按照被更新数据的主键，为SQL更新排序。这么做将减少在高并发系统中事务的死锁。 取值 true | false -->
+				<prop key="hibernate.order_updates">true</prop>
+
+				<!-- 如果开启, session在事务完成后将被自动清洗(flush)。 现在更好的方法是使用自动session上下文管理。取值 true 
+					| false -->
+				<prop key="hibernate.transaction.flush_before_completion">true</prop>
+
+				<!-- hibernate-memcache配置 -->
+				<!-- hibernate-memcache配置 -->
+				<!-- 开启二级缓存 -->
+				<!-- <prop key="hibernate.cache.use_second_level_cache">true</prop> -->
+				<!-- 设置缓存类 -->
+				<!-- <prop key="hibernate.cache.provider_class">com.mendao.cache.hibernate.MemcachedCacheProvider</prop> -->
+				<!-- 设置memcache缓存服务器端口 -->
+				<!-- <prop key="hibernate.memcached.servers">${memcached.ip}</prop> -->
+				<!-- 设置二级缓存的前缀名称 -->
+				<!-- <prop key="hibernate.cache.region_prefix">xmemcached</prop> -->
+				<!-- 是否使用结构化的方式缓存对象 -->
+				<!-- <prop key="hibernate.cache.use_structured_entries">true</prop> -->
+				<!-- 是否缓存查询结果 -->
+				<!-- <prop key="hibernate.cache.use_query_cache">true</prop> -->
+				<!-- Memcached宕机警告模式开启 -->
+				<!-- <prop key="hibernate.cache.failureMode">true</prop> -->
+				<!-- 连接超时间 -->
+				<prop key="hibernate.cache.connectTimeout">3000</prop>
+				<!-- 连接池内连接数量 -->
+				<prop key="hibernate.cache.connectionPoolSize">100</prop>
+
+				<!--hibernate结果集滚动 -->
+				<prop key="jdbc.use_scrollable_resultset">true</prop>
+				<!-- 单数据库连接管理事务 -->
+				<!-- <prop key="current_session_context_class">thread</prop> -->
+			</props>
+		</property>
+		<property name="packagesToScan">
+			<list>
+				<value>com.lanhun</value>
+			</list>
+		</property>
+	</bean>
+
+	<!-- 事务管理器 -->
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+
+	<!-- <tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="false" 
+		/> -->
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="get*" read-only="true" />
+			<tx:method name="*" propagation="REQUIRED" rollback-for="Exception" />
+		</tx:attributes>
+	</tx:advice>
+</beans>   

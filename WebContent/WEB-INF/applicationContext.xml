@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:context="http://www.springframework.org/schema/context"
+
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+	http://www.springframework.org/schema/aop 
+	http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+	http://www.springframework.org/schema/tx
+	http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+	http://www.springframework.org/schema/context 
+	http://www.springframework.org/schema/context/spring-context-4.0.xsd"
+	default-lazy-init="false">
+	<!-- 导入属性配置文件 -->
+	<context:property-placeholder location="/WEB-INF/jdbc.properties" 
+		order="1" ignore-unresolvable="true"/>
+	<!-- 导入属性配置文件 -->
+
+
+	<!-- <import resource="applicationContext-JMS.xml" /> -->
+	<import resource="applicationContext-MVC.xml" />
+	<import resource="hibernate.cfg.xml" />
+	<!-- 支持注解 -->
+	<context:annotation-config />
+	<context:component-scan base-package="com" />
+
+	<aop:config>
+		<aop:pointcut id="_service"	expression="(
+	               			execution(* com.lanhun.framework.service.*.*(..))
+	               		or	execution(* com.lanhun.networkpromotion.service.*.*(..))
+	                )" /> 	
+	                
+	     <aop:pointcut id="_controller"	expression="(
+	               			execution(* com.lanhun.framework.controller.*.*(..))
+	               		and !execution(* com.lanhun.framework.controller.vo.*.*(..))	
+	               		or execution(* com.lanhun.networkpromotion.controller.*.*(..))
+	                )" />
+	                
+	     <aop:advisor advice-ref="txAdvice" pointcut-ref="_service"
+             order="3" />           
+		<aop:aspect  ref="exceptionInterceptor" order="2">
+			<!--配置com.spring.service包下所有类或接口的所有方法 -->
+		
+	         <aop:around pointcut-ref="_service" method="logAround"/>
+	         <aop:after-throwing pointcut-ref="_service" method="doThrowing" throwing="ex"/>  
+		<!-- 	<aop:after pointcut-ref="businessService" method="doAfter" /> -->
+		<!-- 	 -->
+			<!-- <aop:after pointcut-ref="businessService" method="doAfter"/>  <aop:after-throwing pointcut-ref="businessService" 
+				method="doThrowing" throwing="ex"/> -->
+		</aop:aspect>
+		<aop:aspect  ref="exceptionInterceptor" order="1">
+			<!--配置com.spring.service包下所有类或接口的所有方法 -->
+		
+	         <aop:around pointcut-ref="_controller" method="logAround"/>
+	        <!--  <aop:around pointcut-ref="_service" method="logAround"/> -->
+	         <aop:after-throwing pointcut-ref="_controller" method="doThrowing" throwing="ex"/> 
+	       <!--   <aop:after-throwing pointcut-ref="_service" method="doThrowing" throwing="ex"/> -->  
+		<!-- 	<aop:after pointcut-ref="businessService" method="doAfter" /> -->
+		<!-- 	 -->
+			<!-- <aop:after pointcut-ref="businessService" method="doAfter"/>  <aop:after-throwing pointcut-ref="businessService" 
+				method="doThrowing" throwing="ex"/> -->
+		</aop:aspect>
+	</aop:config>
+	<bean id="exceptionResolver" class="com.lanhun.framework.utils.HandlerExceptionResolver"/>
+</beans>

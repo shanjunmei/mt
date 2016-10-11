@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:amq="http://activemq.apache.org/schema/core"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+	http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context-4.0.xsd
+	http://activemq.apache.org/schema/core
+	http://activemq.apache.org/schema/core/activemq-core-5.7.0.xsd"
+	default-lazy-init="false">
+
+
+	<!-- 使用spring的listenerContainer，消息用持久化保存，服务器重启不会丢失 -->
+
+	<!-- embedded ActiveMQ Broker -->
+	<!-- <amq:broker useJmx="false" persistent="true">
+		<amq:persistenceAdapter>
+			<amq:amqPersistenceAdapter directory="jms-amq" />
+		</amq:persistenceAdapter>
+		<amq:transportConnectors>
+			<amq:transportConnector uri="tcp://localhost:8180" />
+		</amq:transportConnectors>
+	</amq:broker> -->
+
+	<!-- 连接外部的activeMQ <amq:connectionFactory id="jmsConnectionFactory" brokerURL="tcp://localhost:61616?wireFormat.maxInactivityDuration=0" 
+		/> ActiveMQ connectionFactory -->
+	<!-- <amq:connectionFactory maxThreadPoolSize="100"
+		id="targetConnectionFactory" brokerURL="vm://localhost:61613" />
+ -->
+
+	<bean id="targetConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+		<property name="brokerURL" value="tcp://localhost:61616" />
+	</bean>
+
+
+	<!--发送聊天内容 使用Topic 队列 一对多方式 -->
+	<!-- <amq:topic name="topicSendChatContent" physicalName="JMS-SENDCHATCONTENT-TOPIC" /> -->
+	<amq:queue name="msg" physicalName="JMS-MSG" />
+
+	<!-- Spring用于管理真正的ConnectionFactory的ConnectionFactory -->
+	<bean id="connectionFactory"
+		class="org.springframework.jms.connection.SingleConnectionFactory"
+		destroy-method="destroy">
+		<!-- 目标ConnectionFactory对应真实的可以产生JMS Connection的ConnectionFactory -->
+		<property name="targetConnectionFactory" ref="targetConnectionFactory" />
+	</bean>
+
+	<!-- 创建JMS发送信息的模板的对象 -->
+	<bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+		<property name="connectionFactory" ref="connectionFactory" />
+		<property name="receiveTimeout" value="5000" />
+	</bean>
+	<bean id="simpleMessageConverter" class="org.springframework.jms.support.converter.SimpleMessageConverter"/>
+	
+	<!--每个消费者对应一个MessageListener 和 一个MessageListenerContainer -->
+
+
+
+
+
+	<!-- 发送聊天内容 异步消息 -->
+
+	<!-- 数据库操作 Listener 容器 -->
+	<bean id="msgListenerAdapter"
+		class="org.springframework.jms.listener.adapter.MessageListenerAdapter">
+		<constructor-arg ref="msgListener" />
+		<property name="defaultListenerMethod" value="receive" />
+		<!-- <property name="messageConverter" ref="simpleMessageConverter" /> -->
+	</bean>
+
+	<!--数据库操作 Container 容器 -->
+	<bean id="msgContainer"
+		class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+		<property name="connectionFactory" ref="connectionFactory" />
+		<property name="destination" ref="msg" />
+		<property name="messageListener" ref="msgListenerAdapter" />
+	</bean>
+
+
+</beans>
